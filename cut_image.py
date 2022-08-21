@@ -11,9 +11,7 @@ class CutImage:
 	"""
 
 	def __init__(self):
-		self.img_names = list()
-		self.imgs = list()
-		self.fp = None
+		self.ims = dict()
 		self.w = None
 		self.h = None
 
@@ -25,11 +23,9 @@ class CutImage:
 		:return:
 		"""
 		file_names = os.listdir(dirname)
-		img_names = list(
+		im_names = list(
 			filter(lambda x: x if "." in x and str(x).split(".")[1] in ["png", "jpg", "jpeg"] else False, file_names))
-		for img_name in img_names:
-			img_name = os.path.join(dirname, img_name)
-			self.add(img_name)
+		list(map(lambda im_name: self.add(os.path.join(dirname, im_name)), im_names))
 
 	def add(self, fp: str):
 		"""
@@ -38,13 +34,12 @@ class CutImage:
 		:param fp: 文件路径
 		:return:
 		"""
-		self.img_names.append(fp)
 		im = Image.open(fp=fp)
-		self.imgs.append(im)
+		self.ims[fp] = im
 		self.w, self.h = im.size
 		return im
 
-	def handle(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, save_location: str = "img_cut",
+	def handle(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float, loc_save: str = "img_cut",
 			   counter: int = 1):
 		"""
 		图片剪切及保存
@@ -53,17 +48,18 @@ class CutImage:
 		:param y1: 要剪切的左上角y坐标
 		:param x2: 要剪切的右下角x坐标
 		:param y2: 要剪切的右下角y坐标
-		:param save_location: 保存路径
+		:param loc_save: 保存路径
 		:param counter: 计数器
 		:return:
 		"""
-		logger.info(f"共{len(self.imgs)}张图片需要剪切,正在剪切中...")
-		for im in self.imgs:
+		logger.info(f"共{len(self.ims)}张图片需要剪切,正在剪切中...")
+		for im_name, im in self.ims.items():
 			im_cut = im.crop((x1, y1, x2, y2))
-			if not os.path.exists(os.path.join(os.getcwd(), save_location)):
-				os.mkdir(os.path.join(os.getcwd(), save_location))
-			img_name = os.path.split(self.img_names.pop(0))[-1]
-			im_cut.save(os.path.join(os.getcwd(), save_location, img_name))
+			loc = os.path.join(os.getcwd(), loc_save)
+			if not os.path.exists(loc):
+				os.mkdir(loc)
+			img_name = os.path.split(im_name)[-1]
+			im_cut.save(os.path.join(os.getcwd(), loc_save, img_name))
 			logger.info(f"第{counter}张图片剪切完成")
 			counter += 1
 
